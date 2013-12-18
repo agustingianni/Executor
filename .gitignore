@@ -1,0 +1,7 @@
+.cproject
+.project
+.pydevproject
+.settings/
+libs/include/
+libs/lib/
+*.o
