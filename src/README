@@ -1,0 +1,24 @@
+TODO:
+
+    - When removing hooks we need to verify that no threads are actually executing the hooks.
+    - When we single step over a breakpoint while other threads are sleeping we need to
+      verify that we wont run into a syscall since that could mean a deadlock.
+    - When the software loads new libraries or unloads them we have to deal with those.
+    - When hooking on ARM we do not yet save the SP register so we cannot read the original 
+      stack inside the hook.
+    - When we try to unload the hook library, the process crash, so we don't.
+    - THUMB hooks may be wrong due to the fact that there are instructions whose size
+      is 4 instead of 2. We need a C/C++ disassembler for this.
+
+This software requires the following Ubuntu packages:
+
+    libelf-dev
+    libboost-all-dev
+    
+And the following library for other sources:
+
+    http://udis86.sourceforge.net/
+    
+Kudos to skape for good documentation:
+
+    http://www.nologin.org/Downloads/Papers/remote-library-injection.pdf

@@ -1,0 +1,48 @@
+CXX=arm-linux-androideabi-c++
+CC=arm-linux-androideabi-gcc
+
+CFLAGS=-c -Wall -std=c++11 -ggdb -I . -I ../libs/include -static -D_LITTLE_ENDIAN -Wno-sign-compare -Wno-unused-variable -D__arm__=1
+LDFLAGS=-lboost_signals-gcc-mt-1_53 -lboost_filesystem-gcc-mt-1_53 -lboost_system-gcc-mt-1_53 -lzmq -lelf -ludis86 -L ../libs/lib 
+
+all: Hooker Hooks.so Observer Bugger tests
+
+# Build the Bugger binary.
+OBJECTS=Bugger.o Debugger.o EventHandler.o Disassembler.o Breakpoint.o MemoryRegion.o Process.o Assorted.o ThreadList.o RemoteCall.o Modules.o RemoteAllocator.o
+Bugger: $(OBJECTS)
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+# Build the Hooker binary.
+OBJECTS=Debugger.o EventHandler.o Hooker.o Disassembler.o Breakpoint.o MemoryRegion.o Process.o Assorted.o ThreadList.o RemoteCall.o Modules.o RemoteAllocator.o
+Hooker: $(OBJECTS)
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+# Build the Observer binary.
+OBJECTS=Debugger.o EventHandler.o Disassembler.o Breakpoint.o MemoryRegion.o Process.o Assorted.o ThreadList.o RemoteCall.o Modules.o RemoteAllocator.o Observer.o
+Observer: $(OBJECTS)
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+# Build all the hooks defined by the user.
+Hooks.so: Hooks.cpp
+	$(CXX) $^ -o $@ -fPIC -shared -Wall -std=c++11 -ggdb -D__arm__=1
+
+.cpp.o:
+	$(CXX) $(CFLAGS) $< -o $@
+
+hookme: tests/hookme.c
+	$(CC) $^ -o tests/hookme.arm -Wall -ggdb
+	$(CC) $^ -o tests/hookme.thumb -mthumb -Wall -ggdb
+
+tests: hookme
+
+clean:
+	rm -rf *.o Hooker Observer Hooks.so Bugger tests/hookme
+
+# Push the binaries to the phone/emulator
+install:
+	adb push Hooker /data/local/tmp
+	#adb push Observer /data/local/tmp
+	#adb push Bugger /data/local/tmp
+	adb push tests/hookme.arm /data/local/tmp
+	adb push tests/hookme.thumb /data/local/tmp
+	adb push Hooks.so /data/local/tmp
+	
